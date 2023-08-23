@@ -24,6 +24,18 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const usersCollection = client
+      .db("backendTaskAuthentication")
+      .collection("users");
+
+    app.post("/register", async (req, res) => {
+      const userData = req.body;
+      console.log(userData);
+      const result = await usersCollection.insertOne(userData);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
