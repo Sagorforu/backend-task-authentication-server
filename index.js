@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const port = process.env.PORT || 5000;
@@ -8,6 +9,8 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
+const jwtSecretKey = "dkjfdjgrfgjjrgdhahdkhfkdhfkldnfkjuedhfhf";
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.gaxw2ro.mongodb.net/?retryWrites=true&w=majority`;
@@ -65,7 +68,23 @@ async function run() {
             user.password
           );
           if (passwordMatch) {
-            res.status(200).send({ message: "Login successful" });
+            jwt.sign(
+              { email: user.email, userId: user._id },
+              jwtSecretKey,
+              { expiresIn: "1h" },
+              (err, token) => {
+                if (err) {
+                  console.error("Error signing token:", err);
+                  res.status(500).send({ error: "An error occurred" });
+                } else {
+                  res.cookie("token", token, {
+                    httpOnly: true,
+                    maxAge: 3600000,
+                  });
+                  res.status(200).send({ user, message: "Login successful", token });
+                }
+              }
+            );
           } else {
             res.status(401).send({ message: "Invalid password" });
             return;
