@@ -32,6 +32,14 @@ async function run() {
     const usersCollection = client
       .db("backendTaskAuthentication")
       .collection("users");
+    const hotelCollection = client
+      .db("backendTaskAuthentication")
+      .collection("hotels");
+
+    app.get("/hotels", async (req, res) => {
+      const result = await hotelCollection.find().toArray();
+      res.send(result);
+    });
 
     app.post("/register", async (req, res) => {
       const userData = req.body;
@@ -81,7 +89,9 @@ async function run() {
                     httpOnly: true,
                     maxAge: 3600000,
                   });
-                  res.status(200).send({ user, message: "Login successful", token });
+                  res
+                    .status(200)
+                    .send({ user, message: "Login successful", token });
                 }
               }
             );
