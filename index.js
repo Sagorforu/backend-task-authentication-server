@@ -52,6 +52,33 @@ async function run() {
       }
     });
 
+    app.post("/login", async (req, res) => {
+      const loginData = req.body;
+      console.log(loginData);
+      try {
+        const user = await usersCollection.findOne({
+          email: loginData.email,
+        });
+        if (user) {
+          const passwordMatch = bcrypt.compareSync(
+            loginData.password,
+            user.password
+          );
+          if (passwordMatch) {
+            res.status(200).send({ message: "Login successful" });
+          } else {
+            res.status(401).send({ message: "Invalid password" });
+            return;
+          }
+        } else {
+          res.status(401).send({ message: "User not found" });
+          return;
+        }
+      } catch (error) {
+        res.status(500).send({ error: "An error occurred" });
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
