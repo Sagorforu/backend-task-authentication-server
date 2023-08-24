@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -32,8 +33,23 @@ async function run() {
     app.post("/register", async (req, res) => {
       const userData = req.body;
       console.log(userData);
-      const result = await usersCollection.insertOne(userData);
-      res.send(result);
+      try {
+        const existingUser = await usersCollection.findOne({
+          email: userData.email,
+        });
+        const hashedPassword = bcrypt.hashSync(userData.password, 10);
+        userData.password = hashedPassword;
+        if (existingUser) {
+          res.status(400).send({
+            message: "Email already exists. Please choose a different email.",
+          });
+        } else {
+          const result = await usersCollection.insertOne(userData);
+          res.send(result);
+        }
+      } catch (error) {
+        res.status(500).send({ error: "An error occurred" });
+      }
     });
 
     // Send a ping to confirm a successful connection
